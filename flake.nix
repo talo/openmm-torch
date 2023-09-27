@@ -34,9 +34,9 @@
       devShells = forAllSystems ({ pkgs }: {
         built = pkgs.mkShell {
           packages = [
-            (pkgs.python3.withPackages (pkgs: [
+            (pkgs.python3.withPackages (python_packages: [
               self.packages.x86_64-linux.openmmtorch-python
-              pkgs.torch
+              python_packages.torch
             ]))
           ];
           shellHook = ''
@@ -56,7 +56,6 @@
             swig4
             python310
             python310Packages.pip
-            python310Packages.torch-bin
           ];
           shellHook = ''
             echo 'You are in a nix shell'
@@ -71,7 +70,7 @@
       packages = forAllSystems ({ pkgs }: {
         openmmtorch-python = pkgs.python310Packages.toPythonModule
           self.packages.x86_64-linux.default;
-          default = pkgs.callPackage (import ./default.nix) { };
+        default = pkgs.callPackage (import ./default.nix) { };
       });
     };
 }

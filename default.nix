@@ -15,7 +15,6 @@ let
     swig4
     cudaPackages.cudatoolkit
     python310
-    python310Packages.torch-bin
   ];
   projectName = "openmm-torch";
 in gcc11Stdenv.mkDerivation {
