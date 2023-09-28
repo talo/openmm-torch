@@ -9,13 +9,8 @@
 , swig4 }:
 let
   buildDependencies = [ cmake cudaPackages.cudatoolkit addOpenGLRunpath ];
-  cppDependencies = [
-    libtorch-bin
-    openmm
-    swig4
-    cudaPackages.cudatoolkit
-    python310
-  ];
+  cppDependencies =
+    [ libtorch-bin openmm swig4 cudaPackages.cudatoolkit python310 ];
   projectName = "openmm-torch";
 in gcc11Stdenv.mkDerivation {
   name = projectName;
@@ -26,8 +21,11 @@ in gcc11Stdenv.mkDerivation {
   preConfigure = ''
     export OPENMM_HOME=${openmm.override { enableCuda = true; }}
   '';
-  propagatedBuildInputs =
-    [ (openmm.override { enableCuda = true; }) python310Packages.openmm ];
+  propagatedBuildInputs = [
+    (openmm.override { enableCuda = true; })
+    python310Packages.openmm
+    python310Packages.torch
+  ];
   postInstall = ''
     cd python
     # We want to add each of the directories in the torch includes to the include path
