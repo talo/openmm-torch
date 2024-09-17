@@ -7,7 +7,7 @@ let
   projectName = "openmm-torch";
 in gcc13Stdenv.mkDerivation {
   name = projectName;
-  version = "1.1.0";
+  version = "1.4";
   src = ./.;
   nativeBuildInputs = buildDependencies;
   buildInputs = cppDependencies;
@@ -31,8 +31,8 @@ in gcc13Stdenv.mkDerivation {
     swig -includeall -python -c++ -o TorchPluginWrapper.cpp "-I${openmm}/include" $TORCH_INCS ${
       ./python/openmmtorch.i
     }
-    ${python311Packages.python.pythonForBuild.interpreter} setup.py build
-    ${python311Packages.python.pythonForBuild.interpreter} setup.py install --prefix=$out
+    ${python311Packages.python.pythonOnBuildForHost.interpreter} setup.py build
+    ${python311Packages.python.pythonOnBuildForHost.interpreter} setup.py install --prefix=$out
   '';
   postFixup = ''
     addOpenGLRunpath $out/lib/plugins/*.so
