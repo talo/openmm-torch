@@ -3,7 +3,7 @@
 
   # Flake inputs
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable"; # also valid: "nixpkgs"
+    nixpkgs.url = "github:NixOS/nixpkgs/24.05"; # also valid: "nixpkgs"
   };
 
   # Flake outputs
