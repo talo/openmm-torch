@@ -15,14 +15,14 @@
         "x86_64-linux" # 64-bit Intel/AMD Linux
       ];
 
-      overlay = final: prev: {
-        myPackageToUpdate = nixpkgs-unstable.legacyPackages.${system}.c-ares;
-      };
-
       # Helper to provide system-specific attributes
       forAllSystems = f:
         nixpkgs.lib.genAttrs allSystems (system:
           f {
+            overlay = final: prev: {
+              myPackageToUpdate =
+                nixpkgs-unstable.legacyPackages.${system}.c-ares;
+            };
             pkgs = import nixpkgs {
               inherit system;
               config = {
