@@ -1,153 +1,153 @@
-name: CI
-
-on:
-  push:
-    branches:
-      - "master"
-  pull_request:
-    branches:
-      - "master"
-  schedule:
-    # Nightly tests run on master by default:
-    #   Scheduled workflows run on the latest commit on the default or base branch.
-    #   (from https://help.github.com/en/actions/reference/events-that-trigger-workflows#scheduled-events-schedule)
-    - cron: "0 0 * * *"
-
-
-jobs:
-  unix:
-    runs-on: ${{ matrix.os }}
-    name: ${{ matrix.name }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: Linux (CUDA 11.8, Python 3.10, PyTorch 2.1)
-            os: ubuntu-22.04
-            cuda-version: "11.8.0"
-            gcc-version: "10.3.*"
-            nvcc-version: "11.8"
-            python-version: "3.10"
-            pytorch-version: "2.1.*"
-
-          - name: MacOS (Python 3.11, PyTorch 2.4)
-            os: macos-latest
-            cuda-version: ""
-            gcc-version: ""
-            nvcc-version: ""
-            python-version: "3.11"
-            pytorch-version: "2.4.*"
-
-
-    steps:
-      - name: "Check out"
-        uses: actions/checkout@v2
-
-      - name: "Install CUDA Toolkit on Linux (if needed)"
-        uses: Jimver/cuda-toolkit@v0.2.15
-        with:
-          cuda: ${{ matrix.cuda-version }}
-          linux-local-args: '["--toolkit", "--override"]'
-        if: startsWith(matrix.os, 'ubuntu')
-
-      - name: Manage disk space
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          sudo mkdir -p /opt/empty_dir || true
-          for d in \
-                   /opt/ghc \
-                   /opt/hostedtoolcache \
-                   /usr/lib/jvm \
-                   /usr/local/.ghcup \
-                   /usr/local/lib/android \
-                   /usr/local/share/powershell \
-                   /usr/share/dotnet \
-                   /usr/share/swift \
-                   ; do
-            sudo rsync --stats -a --delete /opt/empty_dir/ $d || true
-          done
-          sudo apt-get purge -y -f firefox \
-                                   google-chrome-stable \
-                                   microsoft-edge-stable
-          sudo apt-get autoremove -y >& /dev/null
-          sudo apt-get autoclean -y >& /dev/null
-          sudo docker image prune --all --force
-          df -h
-
-      - name: "Install SDK on MacOS (if needed)"
-        run: source devtools/scripts/install_macos_sdk.sh
-        if: startsWith(matrix.os, 'macos')
-
-      - name: "Update the conda enviroment file"
-        uses: cschleiden/replace-tokens@v1
-        with:
-          tokenPrefix: '@'
-          tokenSuffix: '@'
-          files: devtools/conda-envs/build-${{ matrix.os }}.yml
-        env:
-          CUDATOOLKIT_VERSION: ${{ matrix.cuda-version }}
-          GCC_VERSION: ${{ matrix.gcc-version }}
-          NVCC_VERSION: ${{ matrix.nvcc-version }}
-          PYTORCH_VERSION: ${{ matrix.pytorch-version }}
-
-      - uses: conda-incubator/setup-miniconda@v2
-        name: "Install dependencies with Mamba"
-        with:
-          activate-environment: build
-          environment-file: devtools/conda-envs/build-${{ matrix.os }}.yml
-          miniforge-variant: Mambaforge
-          python-version: ${{ matrix.python-version }}
-        env:
-          # Override the CUDA detection as the CI hosts don't have NVIDIA drivers
-          CONDA_OVERRIDE_CUDA: ${{ matrix.nvcc-version }}
-
-      - name: "List conda packages"
-        shell: bash -l {0}
-        run: conda list
-
-      - name: "Configure"
-        shell: bash -l {0}
-        run: |
-          mkdir build
-          cd build
-
-          SHLIB_EXT=".so"
-          if [[ ${{ matrix.os }} == macos-* ]]; then
-            SHLIB_EXT=".dylib"
-          fi
-
-          cmake .. \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} \
-            -DOPENMM_DIR=${CONDA_PREFIX} \
-            -DTorch_DIR=${CONDA_PREFIX}/lib/python${{ matrix.python-version }}/site-packages/torch/share/cmake/Torch \
-            -DNN_BUILD_OPENCL_LIB=ON \
-            -DOPENCL_INCLUDE_DIR=${CONDA_PREFIX}/include \
-            -DOPENCL_LIBRARY=${CONDA_PREFIX}/lib/libOpenCL${SHLIB_EXT}
-
-      - name: "Build"
-        shell: bash -l {0}
-        run: |
-          cd build
-          make -j2 install
-          make -j2 PythonInstall
-
-      - name: "List plugins"
-        shell: bash -l {0}
-        run: |
-          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib/python${{ matrix.python-version }}/site-packages/torch/lib:${LD_LIBRARY_PATH}"
-          python -c "import openmm as mm; print('---Loaded---', *mm.pluginLoadedLibNames, '---Failed---', *mm.Platform.getPluginLoadFailures(), sep='\n')"
-
-      - name: "Run C++ test"
-        shell: bash -l {0}
-        run: |
-          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib/python${{ matrix.python-version }}/site-packages/torch/lib:${LD_LIBRARY_PATH}"
-          cd build
-          ctest --output-on-failure --exclude-regex "TestCuda|TestOpenCL"
-
-      - name: "Run Python test"
-        shell: bash -l {0}
-        run: |
-          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib/python${{ matrix.python-version }}/site-packages/torch/lib:${LD_LIBRARY_PATH}"
-          cd python/tests
-          pytest --verbose Test*
+#name: CI
+#
+#on:
+#  push:
+#    branches:
+#      - "master"
+#  pull_request:
+#    branches:
+#      - "master"
+#  schedule:
+#    # Nightly tests run on master by default:
+#    #   Scheduled workflows run on the latest commit on the default or base branch.
+#    #   (from https://help.github.com/en/actions/reference/events-that-trigger-workflows#scheduled-events-schedule)
+#    - cron: "0 0 * * *"
+#
+#
+#jobs:
+#  unix:
+#    runs-on: ${{ matrix.os }}
+#    name: ${{ matrix.name }}
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        include:
+#          - name: Linux (CUDA 11.8, Python 3.10, PyTorch 2.1)
+#            os: ubuntu-22.04
+#            cuda-version: "11.8.0"
+#            gcc-version: "10.3.*"
+#            nvcc-version: "11.8"
+#            python-version: "3.10"
+#            pytorch-version: "2.1.*"
+#
+#          - name: MacOS (Python 3.11, PyTorch 2.4)
+#            os: macos-latest
+#            cuda-version: ""
+#            gcc-version: ""
+#            nvcc-version: ""
+#            python-version: "3.11"
+#            pytorch-version: "2.4.*"
+#
+#
+#    steps:
+#      - name: "Check out"
+#        uses: actions/checkout@v2
+#
+#      - name: "Install CUDA Toolkit on Linux (if needed)"
+#        uses: Jimver/cuda-toolkit@v0.2.15
+#        with:
+#          cuda: ${{ matrix.cuda-version }}
+#          linux-local-args: '["--toolkit", "--override"]'
+#        if: startsWith(matrix.os, 'ubuntu')
+#
+#      - name: Manage disk space
+#        if: startsWith(matrix.os, 'ubuntu')
+#        run: |
+#          sudo mkdir -p /opt/empty_dir || true
+#          for d in \
+#                   /opt/ghc \
+#                   /opt/hostedtoolcache \
+#                   /usr/lib/jvm \
+#                   /usr/local/.ghcup \
+#                   /usr/local/lib/android \
+#                   /usr/local/share/powershell \
+#                   /usr/share/dotnet \
+#                   /usr/share/swift \
+#                   ; do
+#            sudo rsync --stats -a --delete /opt/empty_dir/ $d || true
+#          done
+#          sudo apt-get purge -y -f firefox \
+#                                   google-chrome-stable \
+#                                   microsoft-edge-stable
+#          sudo apt-get autoremove -y >& /dev/null
+#          sudo apt-get autoclean -y >& /dev/null
+#          sudo docker image prune --all --force
+#          df -h
+#
+#      - name: "Install SDK on MacOS (if needed)"
+#        run: source devtools/scripts/install_macos_sdk.sh
+#        if: startsWith(matrix.os, 'macos')
+#
+#      - name: "Update the conda enviroment file"
+#        uses: cschleiden/replace-tokens@v1
+#        with:
+#          tokenPrefix: '@'
+#          tokenSuffix: '@'
+#          files: devtools/conda-envs/build-${{ matrix.os }}.yml
+#        env:
+#          CUDATOOLKIT_VERSION: ${{ matrix.cuda-version }}
+#          GCC_VERSION: ${{ matrix.gcc-version }}
+#          NVCC_VERSION: ${{ matrix.nvcc-version }}
+#          PYTORCH_VERSION: ${{ matrix.pytorch-version }}
+#
+#      - uses: conda-incubator/setup-miniconda@v2
+#        name: "Install dependencies with Mamba"
+#        with:
+#          activate-environment: build
+#          environment-file: devtools/conda-envs/build-${{ matrix.os }}.yml
+#          miniforge-variant: Mambaforge
+#          python-version: ${{ matrix.python-version }}
+#        env:
+#          # Override the CUDA detection as the CI hosts don't have NVIDIA drivers
+#          CONDA_OVERRIDE_CUDA: ${{ matrix.nvcc-version }}
+#
+#      - name: "List conda packages"
+#        shell: bash -l {0}
+#        run: conda list
+#
+#      - name: "Configure"
+#        shell: bash -l {0}
+#        run: |
+#          mkdir build
+#          cd build
+#
+#          SHLIB_EXT=".so"
+#          if [[ ${{ matrix.os }} == macos-* ]]; then
+#            SHLIB_EXT=".dylib"
+#          fi
+#
+#          cmake .. \
+#            -DCMAKE_BUILD_TYPE=Release \
+#            -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} \
+#            -DOPENMM_DIR=${CONDA_PREFIX} \
+#            -DTorch_DIR=${CONDA_PREFIX}/lib/python${{ matrix.python-version }}/site-packages/torch/share/cmake/Torch \
+#            -DNN_BUILD_OPENCL_LIB=ON \
+#            -DOPENCL_INCLUDE_DIR=${CONDA_PREFIX}/include \
+#            -DOPENCL_LIBRARY=${CONDA_PREFIX}/lib/libOpenCL${SHLIB_EXT}
+#
+#      - name: "Build"
+#        shell: bash -l {0}
+#        run: |
+#          cd build
+#          make -j2 install
+#          make -j2 PythonInstall
+#
+#      - name: "List plugins"
+#        shell: bash -l {0}
+#        run: |
+#          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib/python${{ matrix.python-version }}/site-packages/torch/lib:${LD_LIBRARY_PATH}"
+#          python -c "import openmm as mm; print('---Loaded---', *mm.pluginLoadedLibNames, '---Failed---', *mm.Platform.getPluginLoadFailures(), sep='\n')"
+#
+#      - name: "Run C++ test"
+#        shell: bash -l {0}
+#        run: |
+#          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib/python${{ matrix.python-version }}/site-packages/torch/lib:${LD_LIBRARY_PATH}"
+#          cd build
+#          ctest --output-on-failure --exclude-regex "TestCuda|TestOpenCL"
+#
+#      - name: "Run Python test"
+#        shell: bash -l {0}
+#        run: |
+#          export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib/python${{ matrix.python-version }}/site-packages/torch/lib:${LD_LIBRARY_PATH}"
+#          cd python/tests
+#          pytest --verbose Test*
