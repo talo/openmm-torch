@@ -19,17 +19,17 @@
       forAllSystems = f:
         nixpkgs.lib.genAttrs allSystems (system:
           f {
-            overlay = final: prev: {
-              myPackageToUpdate =
-                nixpkgs-unstable.legacyPackages.${system}.c-ares;
-            };
             pkgs = import nixpkgs {
               inherit system;
               config = {
                 allowUnfree = true;
                 cudaSupport = true;
               };
-              overlays = [ overlay ];
+              overlays = [
+                (final: prev: {
+                  c-ares = nixpkgs-unstable.legacyPackages.${system}.c-ares;
+                })
+              ];
             };
           });
 
