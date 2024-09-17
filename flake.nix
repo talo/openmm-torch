@@ -66,7 +66,7 @@
       });
 
       packages = forAllSystems ({ pkgs }: {
-        openmmtorch-python = pkgs.python310Packages.toPythonModule
+        openmmtorch-python = pkgs.python311Packages.toPythonModule
           self.packages.x86_64-linux.default;
         default = pkgs.callPackage (import ./default.nix) { };
       });
