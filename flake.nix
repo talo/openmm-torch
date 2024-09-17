@@ -3,16 +3,21 @@
 
   # Flake inputs
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/23.11"; # also valid: "nixpkgs"
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
   };
 
   # Flake outputs
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, nixpkgs-unstable }:
     let
       # Systems supported
       allSystems = [
         "x86_64-linux" # 64-bit Intel/AMD Linux
       ];
+
+      overlay = final: prev: {
+        myPackageToUpdate = nixpkgs-unstable.legacyPackages.${system}.c-ares;
+      };
 
       # Helper to provide system-specific attributes
       forAllSystems = f:
@@ -24,6 +29,7 @@
                 allowUnfree = true;
                 cudaSupport = true;
               };
+              overlays = [ overlay ];
             };
           });
 
