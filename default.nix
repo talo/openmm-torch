@@ -1,11 +1,11 @@
-{ cudaPackages, python311, python311Packages, openmm, libtorch-bin
+{ gcc13Stdenv, cudaPackages, python311, python311Packages, openmm, libtorch-bin
 , cmake, addOpenGLRunpath, swig4 }:
 let
   buildDependencies = [ cmake cudaPackages.cudatoolkit addOpenGLRunpath ];
   cppDependencies =
     [ libtorch-bin openmm swig4 cudaPackages.cudatoolkit python311 ];
   projectName = "openmm-torch";
-in stdenv.mkDerivation {
+in gcc13Stdenv.mkDerivation {
   name = projectName;
   version = "1.1.0";
   src = ./.;
