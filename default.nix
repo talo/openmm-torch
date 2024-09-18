@@ -19,23 +19,28 @@ in gcc13Stdenv.mkDerivation {
   '';
   propagatedBuildInputs = [
     (openmm.override { enableCuda = true; })
+    python311Packages.setuptools
+    python311Packages.wheel
+    python311Packages.build
+    python311Packages.pip
     python311Packages.openmm
     python311Packages.torch-bin
   ];
   postInstall = ''
-    cd python
-    # We want to add each of the directories in the torch includes to the include path
-    TORCH_INCS_DIR=${libtorch-bin.dev}/include
-    TORCH_INCS=""
-    for dir in $TORCH_INCS_DIR/*; do
-      TORCH_INCS="$TORCH_INCS -I$dir"
-    done
+        cd python
+        # We want to add each of the directories in the torch includes to the include path
+        TORCH_INCS_DIR=${libtorch-bin.dev}/include
+        TORCH_INCS=""
+        for dir in $TORCH_INCS_DIR/*; do
+          TORCH_INCS="$TORCH_INCS -I$dir"
+        done
 
-    swig -includeall -python -c++ -o TorchPluginWrapper.cpp "-I${openmm}/include" $TORCH_INCS ${
-      ./python/openmmtorch.i
-    }
-    ${python311Packages.python.pythonOnBuildForHost.interpreter} setup.py build
-    ${python311Packages.python.pythonOnBuildForHost.interpreter} setup.py install --prefix=$out
+        swig -includeall -python -c++ -o TorchPluginWrapper.cpp "-I${openmm}/include" $TORCH_INCS ${
+          ./python/openmmtorch.i
+        }
+    ${python311Packages.python.pythonOnBuildForHost.interpreter} -m build --wheel --outdir dist
+    ${python311Packages.python.pythonOnBuildForHost.interpreter} -m pip install --prefix=$out dist/*.whl
+
   '';
   postFixup = ''
     addOpenGLRunpath $out/lib/plugins/*.so
