@@ -40,7 +40,7 @@
           packages = [
             (pkgs.python311.withPackages (python_packages: [
               self.packages.x86_64-linux.openmmtorch-python
-              python_packages.torch
+              python_packages.torch-bin
             ]))
           ];
           shellHook = ''

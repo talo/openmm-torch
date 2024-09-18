@@ -2,6 +2,7 @@
 , cmake, addOpenGLRunpath, swig4 }:
 let
   buildDependencies = [ cmake cudaPackages.cudatoolkit addOpenGLRunpath ];
+  omm = openmm.override { enableCuda = true; };
   cppDependencies =
     [ libtorch-bin openmm swig4 cudaPackages.cudatoolkit python311 ];
   projectName = "openmm-torch";
@@ -11,13 +12,15 @@ in gcc13Stdenv.mkDerivation {
   src = ./.;
   nativeBuildInputs = buildDependencies;
   buildInputs = cppDependencies;
+  OPENMM_HOME = omm;
+  cmakeFlags = [ "-DTORCH_CUDA_ARCH_LIST=8.0" "-DOPENMM_DIR=${omm}" ];
   preConfigure = ''
-    export OPENMM_HOME=${openmm.override { enableCuda = true; }}
+    export OPENMM_HOME=${omm}
   '';
   propagatedBuildInputs = [
     (openmm.override { enableCuda = true; })
     python311Packages.openmm
-    python311Packages.torch
+    python311Packages.torch-bin
   ];
   postInstall = ''
     cd python
