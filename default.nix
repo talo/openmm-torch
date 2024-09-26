@@ -5,7 +5,7 @@ let
   omm = openmm.override { enableCuda = true; };
   cppDependencies =
     [ libtorch-bin openmm swig4 cudaPackages.cudatoolkit python311 ];
-  projectName = "openmm-torch";
+  projectName = "openmmtorch";
 in gcc13Stdenv.mkDerivation {
   name = projectName;
   version = "1.4";
