@@ -9,8 +9,7 @@ let
 in gcc13Stdenv.mkDerivation {
   name = projectName;
   version = "1.4";
-  src = ".";
-  sourceRoot = ".";
+  src = ./.;
   nativeBuildInputs = buildDependencies;
   buildInputs = cppDependencies;
   OPENMM_HOME = omm;
