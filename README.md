@@ -12,6 +12,12 @@ To use it, you create a PyTorch model that takes a `(nparticles,3)` tensor of pa
 The `TorchForce` provided by this plugin can then use the model to compute energy contributions or apply forces to particles during a simulation.
 `TorchForce` also supports the use of global context parameters that can be fed to the model and changed dynamically during runtime.
 
+## Nix
+Building with nix and entering dev shell
+```bash
+nix develop .#built
+```
+
 Installation
 ============
 
