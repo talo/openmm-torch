@@ -40,7 +40,7 @@
           packages = [
             (pkgs.python311.withPackages (python_packages: [
               self.packages.x86_64-linux.openmmtorch-python
-              python_packages.torch-bin
+              python_packages.torch
             ]))
           ];
           shellHook = ''
@@ -55,6 +55,7 @@
             cmake
             cudaPackages.cudatoolkit
             # Other libraries
+            python311Packages.torch
             libtorch-bin
             python311Packages.openmm
             swig4
