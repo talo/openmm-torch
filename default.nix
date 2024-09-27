@@ -6,19 +6,10 @@ let
   cppDependencies =
     [ libtorch-bin openmm swig4 cudaPackages.cudatoolkit python311 ];
   projectName = "openmmtorch";
-  overlay = final: prev: {
-    python311Packages = prev.python311Packages {
-      torch = prev.python311Packages.torch.overrideAttrs (oldAttrs: rec {
-        cmakeFlags = (oldAttrs.cmakeFlags or [ ])
-          ++ [ "-DGLIBCXX_USE_CXX11_ABI=1" ];
-      });
-    };
-  };
 in gcc13Stdenv.mkDerivation {
   name = projectName;
   version = "1.4";
   src = ./.;
-  overlays = [ overlay ];
   nativeBuildInputs = buildDependencies;
   buildInputs = cppDependencies;
   OPENMM_HOME = omm;

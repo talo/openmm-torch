@@ -28,6 +28,22 @@
               overlays = [
                 (final: prev: {
                   c-ares = nixpkgs-unstable.legacyPackages.${system}.c-ares;
+                  python311 = prev.python311.override {
+                    packageOverrides = pyself: pysuper: {
+                      torch = pysuper.torch.overrideAttrs (oldAttrs: {
+                        cmakeFlags = (oldAttrs.cmakeFlags or [ ])
+                          ++ [ "-DGLIBCXX_USE_CXX11_ABI=1" ];
+                      });
+                    };
+                  };
+                  python3 = prev.python3.override {
+                    packageOverrides = pyself: pysuper: {
+                      torch = pysuper.torch.overrideAttrs (oldAttrs: {
+                        cmakeFlags = (oldAttrs.cmakeFlags or [ ])
+                          ++ [ "-DGLIBCXX_USE_CXX11_ABI=1" ];
+                      });
+                    };
+                  };
                 })
               ];
             };
